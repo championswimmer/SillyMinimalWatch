@@ -43,6 +43,8 @@ import java.util.TimeZone;
  */
 public class SillyWatchFace extends CanvasWatchFaceService {
     private static Typeface NORMAL_TYPEFACE;
+    private static Typeface BOLD_TYPEFACE;
+    private static Typeface ITALIC_TYPEFACE;
 
 
     /**
@@ -53,6 +55,7 @@ public class SillyWatchFace extends CanvasWatchFaceService {
     @Override
     public Engine onCreateEngine() {
         NORMAL_TYPEFACE = Typeface.createFromAsset(getAssets(), "YanoneKaffeesatz-Thin.ttf");
+        BOLD_TYPEFACE = Typeface.createFromAsset(getAssets(), "YanoneKaffeesatz-Bold.ttf");
         return new Engine();
     }
 
@@ -70,7 +73,8 @@ public class SillyWatchFace extends CanvasWatchFaceService {
         boolean mRegisteredTimeZoneReceiver = false;
 
         Paint mBackgroundPaint;
-        Paint mTextPaint;
+        Paint mNormalTextPaint;
+        Paint mBoldTextPaint;
 
         boolean mAmbient;
 
@@ -93,6 +97,7 @@ public class SillyWatchFace extends CanvasWatchFaceService {
             super.onCreate(holder);
 
             NORMAL_TYPEFACE = Typeface.createFromAsset(getAssets(), "YanoneKaffeesatz-Thin.ttf");
+            BOLD_TYPEFACE = Typeface.createFromAsset(getAssets(), "YanoneKaffeesatz-Bold.ttf");
 
             setWatchFaceStyle(new WatchFaceStyle.Builder(SillyWatchFace.this)
                     .setCardPeekMode(WatchFaceStyle.PEEK_MODE_VARIABLE)
@@ -107,8 +112,11 @@ public class SillyWatchFace extends CanvasWatchFaceService {
             mBackgroundPaint = new Paint();
             mBackgroundPaint.setColor(resources.getColor(R.color.digital_background));
 
-            mTextPaint = new Paint();
-            mTextPaint = createTextPaint(resources.getColor(R.color.digital_text));
+            mNormalTextPaint = new Paint();
+            mNormalTextPaint = createNormalTextPaint(resources.getColor(R.color.digital_text));
+
+            mBoldTextPaint = new Paint();
+            mBoldTextPaint = createBoldTextPaint(resources.getColor(R.color.digital_text));
 
             mTime = new Time();
         }
@@ -119,10 +127,17 @@ public class SillyWatchFace extends CanvasWatchFaceService {
             super.onDestroy();
         }
 
-        private Paint createTextPaint(int textColor) {
+        private Paint createNormalTextPaint(int textColor) {
             Paint paint = new Paint();
             paint.setColor(textColor);
             paint.setTypeface(NORMAL_TYPEFACE);
+            paint.setAntiAlias(true);
+            return paint;
+        }
+        private Paint createBoldTextPaint(int textColor) {
+            Paint paint = new Paint();
+            paint.setColor(textColor);
+            paint.setTypeface(BOLD_TYPEFACE);
             paint.setAntiAlias(true);
             return paint;
         }
@@ -175,7 +190,8 @@ public class SillyWatchFace extends CanvasWatchFaceService {
             float textSize = resources.getDimension(isRound
                     ? R.dimen.digital_text_size_round : R.dimen.digital_text_size);
 
-            mTextPaint.setTextSize(textSize);
+            mNormalTextPaint.setTextSize(textSize);
+            mBoldTextPaint.setTextSize(textSize);
         }
 
         @Override
@@ -196,7 +212,8 @@ public class SillyWatchFace extends CanvasWatchFaceService {
             if (mAmbient != inAmbientMode) {
                 mAmbient = inAmbientMode;
                 if (mLowBitAmbient) {
-                    mTextPaint.setAntiAlias(!inAmbientMode);
+                    mNormalTextPaint.setAntiAlias(!inAmbientMode);
+                    mBoldTextPaint.setAntiAlias(!inAmbientMode);
                 }
                 invalidate();
             }
@@ -231,6 +248,26 @@ public class SillyWatchFace extends CanvasWatchFaceService {
             return "";
         }
 
+        private String getHr (int n) {
+            String hrTxt = "";
+            if (n < 10) {
+                hrTxt = getUnitsWord(n);
+            } else {
+                switch (mTime.hour) {
+                    case 10:
+                        hrTxt = "tin";
+                        break;
+                    case 11:
+                        hrTxt = "leven";
+                        break;
+                    case 12:
+                        hrTxt = "twill";
+                        break;
+                }
+            }
+            return hrTxt;
+        }
+
         @Override
         public void onDraw(Canvas canvas, Rect bounds) {
             // Draw the background.
@@ -238,20 +275,11 @@ public class SillyWatchFace extends CanvasWatchFaceService {
 
             // Draw H:MM in ambient mode or H:MM:SS in interactive mode.
             mTime.setToNow();
-            String hrTxt = "", minTxt = "";
-            switch (mTime.hour) {
-                case 1:
-                case 2:
-                case 3:
-                case 4:
-                case 5:
-                case 6:
-                case 7:
-                case 8:
-                case 9: hrTxt = getUnitsWord(mTime.hour); break;
-                case 10: hrTxt = "tin"; break;
-                case 11: hrTxt = "leven"; break;
-                case 12: hrTxt = "twill"; break;
+            String hrTxt = "hr", minTxt = "min";
+            if (mTime.hour < 12) {
+                hrTxt = getHr(mTime.hour);
+            } else {
+                hrTxt = getHr(mTime.hour - 12);
             }
             switch (mTime.minute) {
                 case 10: minTxt = "tin"; break;
@@ -291,9 +319,9 @@ public class SillyWatchFace extends CanvasWatchFaceService {
                 case 11: monthTxt = "nov"; break;
                 case 12: monthTxt = "dev"; break;
             }
-            canvas.drawText(hrTxt, mXOffset, mYOffset1, mTextPaint);
-            canvas.drawText(minTxt, mXOffset, mYOffset2, mTextPaint);
-            canvas.drawText((dayTxt + monthTxt + mTime.monthDay), mXOffset, mYOffset3, mTextPaint);
+            canvas.drawText(hrTxt, mXOffset, mYOffset1, mBoldTextPaint);
+            canvas.drawText(minTxt, mXOffset, mYOffset2, mNormalTextPaint);
+            canvas.drawText((dayTxt + monthTxt + mTime.monthDay), mXOffset, mYOffset3, mNormalTextPaint);
         }
 
         /**
