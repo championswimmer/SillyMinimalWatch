@@ -231,7 +231,7 @@ public class SillyWatchFace extends CanvasWatchFaceService {
                 case 3: hrTxt = "tree"; break;
                 case 4: hrTxt = "foe"; break;
                 case 5: hrTxt = "phi"; break;
-                case 6: hrTxt = "see"; break;
+                case 6: hrTxt = "sick"; break;
                 case 7: hrTxt = "swan"; break;
                 case 8: hrTxt = "ate"; break;
                 case 9: hrTxt = "nay"; break;
